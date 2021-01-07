@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema SD</title>
+  <link rel="stylesheet" type="text/css" href="./styles.css" />
+</head>
+<body>
+  <div id="newMessage-popup" class="overlay">
+    <div class="popup">
+      <div class="row">
+        <label>Destinatario</label>
+        <input type="text" id="destinatario"/>
+      </div>
+      <div class="row">
+        <label>Assunto</label>
+        <input type="text" id="assunto"/>
+      </div>
+      <div class="row">
+        <label>Corpo</label>
+        <textarea type="" id="corpo"></textarea>
+      </div>
+      <div class="row">
+        <a class="close" href="#">Fechar</a>
+        <a type="button" href="#" onclick=handleSendEmail()>
+          Enviar
+         </a>
+      </div>
+    </div>
+  </div>
+  <div id="login-container">
+    <p class="title">Sistema de email SD</p>
+    <label for="email">
+      Digite seu melhor e-mail
+    </label>
+    <input type="email" id="email"/>
+    <button onclick=handleLogin()>Entrar</button>
+  </div>
+  <div id="dashboard-container">
+    <p class="title" id="welcomeTitle">Bem vindo,<p class="title" id="userEmail"></p></p>
+    <h4>Seus e-mails</h4>
+    <div class="email-container" id ="email-container">
+    </div>
+    <a href="#newMessage-popup">Nova mensagem</a>
+  </div>
+  </div>
+</body>
+<script>
+
+
+
+
+  async function handleMessageDetails(messageId){
+    let messageDetailsStyle = document.getElementById(messageId).style.visibility;
+    if(messageDetailsStyle !== 'visible'){
+      document.getElementById(messageId).style.visibility = 'visible'
+      document.getElementById(messageId).style.opacity = 1;
+      document.getElementById(messageId).style.position = 'inherit';
+    }else{
+      document.getElementById(messageId).style.opacity = 0;
+      document.getElementById(messageId).style.position = 'absolute';
+      document.getElementById(messageId).style.visibility = 'hidden'
+
+    }
+  }
+
+  async function generateDashboard(messages,userEmail){
+    let dashboardDiv = document.getElementById("dashboard-container");
+    document.getElementById("userEmail").innerHTML=`${userEmail}`
+
+    let emailContainer = document.getElementById("email-container");
+    document.getElementById("email-container").innerHTML= ''
+    messages.forEach(actualMessage => {
+      const actualMessageId = actualMessage.uid;
+      emailContainer.insertAdjacentHTML("afterbegin",`
+      <div class="message-container"  id="${actualMessageId}" onclick=handleMessageDetails("details-${actualMessageId}")>
+        <p class="message-sender">${actualMessage.remetente}</p>
+        <p class="message-subject-${actualMessageId}">${actualMessage.assunto}</p>
+        <div class="message-details" id="details-${actualMessageId}">
+          <p class="message-content-${actualMessageId}">
+            ${actualMessage.corpo}
+            </p>
+            <div class="row">
+              <button onclick=handleDelete("${actualMessageId}")>
+                Apagar
+              </button>
+              </div>
+            </div>
+        </div>
+       </hr>
+      </div>
+      
+      `)
+    });
+    dashboardDiv.style.display = 'flex'
+  }
+
+
+  async function handleSendEmail(){
+    const userEmail = document.getElementById("userEmail").innerHTML
+    const destinatario = document.getElementById("destinatario").value
+    const assunto = document.getElementById("assunto").value
+    const corpo = document.getElementById("corpo").value
+    await fetch(`/messages`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        destinatario,
+        remetente : userEmail,
+        assunto,
+        corpo
+      })
+    }).then(
+      async (response) => {
+          const data = await fetch(`/messages/${userEmail}`).then(
+            (response) => response.json()
+            )
+          document.getElementById("login-container").style.display = 'none'
+          generateDashboard(data.messages,data.userEmail)
+      })
+      
+  }
+  
+  async function handleLogin(){
+    const userEmail = document.getElementById("email").value
+
+    const data = await fetch(`/messages/${userEmail}`).then(
+      (response) => response.json()
+      )
+    document.getElementById("login-container").style.display = 'none'
+    generateDashboard(data.messages,data.userEmail)
+  }
+
+  async function handleDelete(id){
+    await fetch(`/messages/${id}`,{method:'DELETE'}).then(
+      (response) =>{ 
+        if(response.status === 204){
+          document.getElementById(id).remove();
+        }
+      }
+      )
+  }
+</script>
+</html>

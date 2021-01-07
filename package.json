@@ -1,0 +1,19 @@
+{
+  "name": "rest",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon src/server.js"
+  },
+  "devDependencies": {
+    "eslint": "^7.16.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "nodemon": "^2.0.6",
+    "sucrase": "^3.16.0"
+  },
+  "dependencies": {
+    "uuid": "^8.3.2"
+  }
+}
